@@ -1,0 +1,16 @@
+database:
+  enabled: true
+  type: postgres
+  name: "customer-db"
+  instanceClass: db.t4g.micro
+  allocatedStorage: 20
+  backupRetentionPeriod: 1
+  multiAZ: false
+  username: postgres_admin
+  secretsManager:
+    enabled: true
+    name: "customerdb-secret"
+    passwordSourceSecretKey: password
+
+s3:
+  enabled: false
