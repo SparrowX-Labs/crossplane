@@ -1,0 +1,97 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xapplicationinfrastructures.infrastructure.sparrowx.io
+spec:
+  group: infrastructure.sparrowx.io
+  scope: Namespaced
+  names:
+    kind: XApplicationInfrastructure
+    plural: xapplicationinfrastructures
+    shortNames:
+      - xappinfra
+  claimNames:
+    kind: ApplicationInfrastructure
+    plural: applicationinfrastructures
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - environment
+                - projectName
+                - region
+                - vpcId
+                - privateSubnetIds
+                - hostedZoneId
+                - hostedZoneName
+                - service
+              properties:
+                environment:
+                  type: string
+                projectName:
+                  type: string
+                region:
+                  type: string
+                vpcId:
+                  type: string
+                privateSubnetIds:
+                  type: array
+                  items:
+                    type: string
+                hostedZoneId:
+                  type: string
+                hostedZoneName:
+                  type: string
+                service:
+                  type: object
+                  required:
+                    - name
+                  properties:
+                    name:
+                      type: string
+                database:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    engine:
+                      type: string
+                      enum:
+                        - postgres
+                      default: postgres
+                    name:
+                      type: string
+                    size:
+                      type: string
+                      enum:
+                        - small
+                        - medium
+                        - large
+                        - xlarge
+                      default: small
+                    storage:
+                      type: integer
+                      minimum: 20
+                      default: 20
+                    multiAZ:
+                      type: boolean
+                      default: false
+                s3:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    name:
+                      type: string
+                    forceDestroy:
+                      type: boolean
+                      default: false

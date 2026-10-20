@@ -1,0 +1,14 @@
+service:
+  name: customer-api
+
+database:
+  enabled: false
+  engine: postgres
+  name: "customerdb"
+  size: small
+  storage: 20
+  multiAZ: false
+
+s3:
+  enabled: false
+  name: "customer-api-1234577095"

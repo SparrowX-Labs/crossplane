@@ -1,0 +1,207 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: application-infrastructure
+spec:
+  compositeTypeRef:
+    apiVersion: infrastructure.sparrowx.io/v1alpha1
+    kind: XApplicationInfrastructure
+  mode: Pipeline
+  pipeline:
+    - step: render-resources
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- $xr := getCompositeResource . }}
+            {{- $spec := $xr.spec }}
+            {{- $namespace := $xr.metadata.namespace }}
+            {{- $project := $spec.projectName }}
+            {{- $environment := $spec.environment }}
+            {{- $region := $spec.region }}
+            {{- $serviceName := $spec.service.name }}
+            {{- $baseName := printf "%s-%s-%s" $project $environment $serviceName | lower | replace "_" "-" | trunc 63 | trimSuffix "-" }}
+            {{- $repositoryName := printf "%s/%s/%s" $project $environment $serviceName | lower | replace "_" "-" }}
+            ---
+            apiVersion: ecr.aws.m.upbound.io/v1beta1
+            kind: Repository
+            metadata:
+              name: {{ printf "%s-ecr" $baseName | trunc 63 | trimSuffix "-" }}
+              namespace: {{ $namespace }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: ecr-repository
+            spec:
+              managementPolicies:
+                - "*"
+              forProvider:
+                region: {{ $region | quote }}
+                name: {{ $repositoryName | quote }}
+                imageTagMutability: MUTABLE
+                imageScanningConfiguration:
+                  scanOnPush: true
+                tags:
+                  Name: {{ $repositoryName | quote }}
+                  Project: {{ $project | quote }}
+                  Environment: {{ $environment | quote }}
+                  ManagedBy: crossplane
+              providerConfigRef:
+                name: aws-provider
+                kind: ClusterProviderConfig
+            {{- if and $spec.database $spec.database.enabled }}
+            {{- $dbName := $spec.database.name }}
+            {{- $dbBaseName := printf "%s-%s-%s" $project $environment $dbName | lower | replace "_" "-" | trunc 63 | trimSuffix "-" }}
+            {{- $securityGroupName := printf "%s-sg" $dbBaseName | trunc 63 | trimSuffix "-" }}
+            {{- $subnetGroupName := printf "%s-subnet-group" $dbBaseName | trunc 63 | trimSuffix "-" }}
+            {{- $classes := dict "small" "db.t4g.micro" "medium" "db.t4g.small" "large" "db.t4g.medium" "xlarge" "db.t4g.large" }}
+            {{- $instanceClass := get $classes $spec.database.size | default "db.t4g.micro" }}
+            ---
+            apiVersion: ec2.aws.m.upbound.io/v1beta1
+            kind: SecurityGroup
+            metadata:
+              name: {{ $securityGroupName }}
+              namespace: {{ $namespace }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: database-security-group
+            spec:
+              managementPolicies:
+                - "*"
+              forProvider:
+                name: {{ $securityGroupName | quote }}
+                description: {{ printf "Database access for %s" $dbBaseName | quote }}
+                region: {{ $region | quote }}
+                vpcId: {{ $spec.vpcId | quote }}
+                tags:
+                  Name: {{ $securityGroupName | quote }}
+                  Project: {{ $project | quote }}
+                  Environment: {{ $environment | quote }}
+                  ManagedBy: crossplane
+              providerConfigRef:
+                name: aws-provider
+                kind: ClusterProviderConfig
+            ---
+            apiVersion: rds.aws.m.upbound.io/v1beta1
+            kind: SubnetGroup
+            metadata:
+              name: {{ $subnetGroupName }}
+              namespace: {{ $namespace }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: database-subnet-group
+            spec:
+              managementPolicies:
+                - "*"
+              forProvider:
+                description: {{ printf "Private subnets for %s" $dbBaseName | quote }}
+                region: {{ $region | quote }}
+                subnetIds:
+                  {{- toYaml $spec.privateSubnetIds | nindent 16 }}
+                tags:
+                  Name: {{ $subnetGroupName | quote }}
+                  Project: {{ $project | quote }}
+                  Environment: {{ $environment | quote }}
+                  ManagedBy: crossplane
+              providerConfigRef:
+                name: aws-provider
+                kind: ClusterProviderConfig
+            ---
+            apiVersion: rds.aws.m.upbound.io/v1beta1
+            kind: Instance
+            metadata:
+              name: {{ $dbBaseName }}
+              namespace: {{ $namespace }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: database-instance
+            spec:
+              managementPolicies:
+                - "*"
+              forProvider:
+                region: {{ $region | quote }}
+                engine: {{ $spec.database.engine | quote }}
+                engineVersion: "16"
+                identifier: {{ $dbBaseName | quote }}
+                instanceClass: {{ $instanceClass | quote }}
+                allocatedStorage: {{ $spec.database.storage }}
+                storageType: gp3
+                storageEncrypted: true
+                dbName: {{ $dbName | quote }}
+                port: 5432
+                username: postgres_admin
+                manageMasterUserPassword: true
+                dbSubnetGroupNameRef:
+                  name: {{ $subnetGroupName | quote }}
+                vpcSecurityGroupIdRefs:
+                  - name: {{ $securityGroupName | quote }}
+                publiclyAccessible: false
+                backupRetentionPeriod: 1
+                multiAz: {{ $spec.database.multiAZ }}
+                autoMinorVersionUpgrade: true
+                copyTagsToSnapshot: true
+                tags:
+                  Name: {{ $dbBaseName | quote }}
+                  Project: {{ $project | quote }}
+                  Environment: {{ $environment | quote }}
+                  ManagedBy: crossplane
+              writeConnectionSecretToRef:
+                name: {{ printf "%s-connection" $dbBaseName | quote }}
+              providerConfigRef:
+                name: aws-provider
+                kind: ClusterProviderConfig
+            {{- $db := getComposedResource . "database-instance" }}
+            {{- if $db }}
+            {{- $endpoint := get $db.status.atProvider "address" }}
+            {{- if $endpoint }}
+            ---
+            apiVersion: route53.aws.m.upbound.io/v1beta1
+            kind: Record
+            metadata:
+              name: {{ printf "%s-dns" $dbBaseName | trunc 63 | trimSuffix "-" }}
+              namespace: {{ $namespace }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: database-dns-record
+            spec:
+              managementPolicies:
+                - "*"
+              forProvider:
+                name: {{ printf "%s-%s.%s" $dbName $spec.database.engine $spec.hostedZoneName | quote }}
+                type: CNAME
+                ttl: 300
+                records:
+                  - {{ $endpoint | quote }}
+                zoneId: {{ $spec.hostedZoneId | quote }}
+                allowOverwrite: true
+              providerConfigRef:
+                name: aws-provider
+                kind: ClusterProviderConfig
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- if and $spec.s3 $spec.s3.enabled }}
+            ---
+            apiVersion: s3.aws.m.upbound.io/v1beta1
+            kind: Bucket
+            metadata:
+              name: {{ $spec.s3.name | quote }}
+              namespace: {{ $namespace }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: s3-bucket
+            spec:
+              managementPolicies:
+                - "*"
+              forProvider:
+                region: {{ $region | quote }}
+                forceDestroy: {{ $spec.s3.forceDestroy }}
+                tags:
+                  Name: {{ $spec.s3.name | quote }}
+                  Project: {{ $project | quote }}
+                  Environment: {{ $environment | quote }}
+                  ManagedBy: crossplane
+              providerConfigRef:
+                name: aws-provider
+                kind: ClusterProviderConfig
+            {{- end }}
+    - step: automatically-detect-ready
+      functionRef:
+        name: function-auto-ready
