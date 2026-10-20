@@ -8,7 +8,7 @@ database:
   multiAZ: false
   username: postgres_admin
   secretsManager:
-    enabled: true
+    enabled: false
     name: "customerdb-secret"
     passwordSourceSecretKey: password
 
