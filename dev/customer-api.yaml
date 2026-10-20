@@ -7,10 +7,6 @@ database:
   backupRetentionPeriod: 1
   multiAZ: false
   username: postgres_admin
-  secretsManager:
-    enabled: false
-    name: "customerdb-secret"
-    passwordSourceSecretKey: password
 
 s3:
   enabled: false
