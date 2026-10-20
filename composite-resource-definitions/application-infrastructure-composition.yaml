@@ -92,7 +92,6 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-subnet-group
             spec:
-              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
