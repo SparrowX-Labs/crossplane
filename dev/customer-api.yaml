@@ -2,6 +2,7 @@ database:
   enabled: true
   type: postgres
   name: "customerdb"
+  identifier: "sparrowx-dev-customerdb"
   instanceClass: db.t4g.micro
   allocatedStorage: 20
   backupRetentionPeriod: 1
@@ -9,4 +10,5 @@ database:
   username: postgres_admin
 
 s3:
-  enabled: false
+  enabled: enabled
+  name: "customer-api-1234577095"
