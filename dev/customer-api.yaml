@@ -10,5 +10,5 @@ database:
   username: postgres_admin
 
 s3:
-  enabled: enabled
+  enabled: false
   name: "customer-api-1234577095"
