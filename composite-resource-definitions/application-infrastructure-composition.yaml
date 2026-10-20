@@ -35,6 +35,7 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: ecr-repository
             spec:
+              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
@@ -67,6 +68,7 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-security-group
             spec:
+              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
@@ -91,6 +93,7 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-subnet-group
             spec:
+              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
@@ -115,6 +118,7 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-instance
             spec:
+              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
@@ -130,6 +134,7 @@ spec:
                 port: 5432
                 username: postgres_admin
                 manageMasterUserPassword: true
+                skipFinalSnapshot: true
                 dbSubnetGroupNameRef:
                   name: {{ $subnetGroupName | quote }}
                 vpcSecurityGroupIdRefs:
@@ -162,6 +167,7 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-dns-record
             spec:
+              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
@@ -188,6 +194,7 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: s3-bucket
             spec:
+              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
