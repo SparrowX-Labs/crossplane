@@ -30,11 +30,11 @@ spec:
             apiVersion: ecr.aws.m.upbound.io/v1beta1
             kind: Repository
             metadata:
-              # name: {{ printf "%s-ecr" $baseName | trunc 63 | trimSuffix "-" }}
-              name: {{ $repositoryName }}
+              name: {{ printf "%s-ecr" $baseName | trunc 63 | trimSuffix "-" }}
               namespace: {{ $namespace }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: ecr-repository
+                crossplane.io/external-name: {{ $repositoryName }}
             spec:
               managementPolicies:
                 - "*"
