@@ -37,8 +37,6 @@ spec:
             spec:
               managementPolicies:
                 - "*"
-              initProvider:
-                name: {{ $repositoryName | quote }}
               forProvider:
                 region: {{ $region | quote }}
                 imageTagMutability: MUTABLE
