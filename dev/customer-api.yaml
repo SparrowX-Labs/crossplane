@@ -1,7 +1,7 @@
 database:
   enabled: true
   type: postgres
-  name: "customer-db"
+  name: "customerdb"
   instanceClass: db.t4g.micro
   allocatedStorage: 20
   backupRetentionPeriod: 1
