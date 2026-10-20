@@ -1,0 +1,13 @@
+service:
+  name: task-api
+
+database:
+  enabled: true
+  engine: postgres
+  name: "taskdb"
+  size: small
+  storage: 20
+  multiAZ: false
+
+s3:
+  enabled: false

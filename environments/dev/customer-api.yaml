@@ -10,5 +10,4 @@ database:
   multiAZ: false
 
 s3:
-  enabled: true
-  name: "customer-api-1234577096"
+  enabled: false
