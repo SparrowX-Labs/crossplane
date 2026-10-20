@@ -10,9 +10,6 @@ spec:
     plural: xapplicationinfrastructures
     shortNames:
       - xappinfra
-  claimNames:
-    kind: ApplicationInfrastructure
-    plural: applicationinfrastructures
   versions:
     - name: v1alpha1
       served: true
