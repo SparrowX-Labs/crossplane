@@ -2,7 +2,7 @@ service:
   name: customer-api
 
 database:
-  enabled: false
+  enabled: true
   engine: postgres
   name: "customerdb"
   size: small
@@ -10,5 +10,5 @@ database:
   multiAZ: false
 
 s3:
-  enabled: false
-  name: "customer-api-1234577095"
+  enabled: true
+  name: "customer-api-1234577096"
