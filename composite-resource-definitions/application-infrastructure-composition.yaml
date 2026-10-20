@@ -68,7 +68,6 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-security-group
             spec:
-              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
