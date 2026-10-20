@@ -35,7 +35,6 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: ecr-repository
             spec:
-              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
@@ -116,7 +115,6 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-instance
             spec:
-              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
@@ -165,7 +163,6 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-dns-record
             spec:
-              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
@@ -192,7 +189,6 @@ spec:
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: s3-bucket
             spec:
-              deletionPolicy: Delete
               managementPolicies:
                 - "*"
               forProvider:
