@@ -75,13 +75,6 @@ spec:
                 description: {{ printf "Database access for %s" $dbBaseName | quote }}
                 region: {{ $region | quote }}
                 vpcId: {{ $spec.vpcId | quote }}
-                ingress:
-                  - description: PostgreSQL from private VPC subnets
-                    protocol: tcp
-                    fromPort: 5432
-                    toPort: 5432
-                    cidrBlocks:
-                      {{- toYaml $spec.privateSubnetCidrs | nindent 22 }}
                 tags:
                   Name: {{ $securityGroupName | quote }}
                   Project: {{ $project | quote }}
@@ -90,6 +83,30 @@ spec:
               providerConfigRef:
                 name: aws-provider
                 kind: ClusterProviderConfig
+            {{- range $index, $cidr := $spec.privateSubnetCidrs }}
+            ---
+            apiVersion: ec2.aws.m.upbound.io/v1beta1
+            kind: SecurityGroupIngressRule
+            metadata:
+              name: {{ printf "%s-postgres-private-%d" $dbBaseName $index | trunc 63 | trimSuffix "-" }}
+              namespace: {{ $namespace }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: {{ printf "database-security-group-ingress-%d" $index }}
+            spec:
+              managementPolicies:
+                - "*"
+              forProvider:
+                region: {{ $region | quote }}
+                ipProtocol: tcp
+                fromPort: 5432
+                toPort: 5432
+                cidrIpv4: {{ $cidr | quote }}
+                securityGroupIdRef:
+                  name: {{ $securityGroupName | quote }}
+              providerConfigRef:
+                name: aws-provider
+                kind: ClusterProviderConfig
+            {{- end }}
             ---
             apiVersion: rds.aws.m.upbound.io/v1beta1
             kind: SubnetGroup
