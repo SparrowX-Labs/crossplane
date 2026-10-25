@@ -59,35 +59,6 @@ spec:
             {{- $subnetGroupName := printf "%s-subnet-group" $dbBaseName | trunc 63 | trimSuffix "-" }}
             {{- $classes := dict "small" "db.t4g.micro" "medium" "db.t4g.small" "large" "db.t4g.medium" "xlarge" "db.t4g.large" }}
             {{- $instanceClass := get $classes $spec.database.size | default "db.t4g.micro" }}
-            {{- range $index, $subnetID := $spec.privateSubnetIds }}
-            ---
-            apiVersion: ec2.aws.m.upbound.io/v1beta1
-            kind: Subnet
-            metadata:
-              name: {{ printf "%s-private-subnet-%d" $baseName $index | trunc 63 | trimSuffix "-" }}
-              namespace: {{ $namespace }}
-              annotations:
-                crossplane.io/external-name: {{ $subnetID | quote }}
-                gotemplating.fn.crossplane.io/composition-resource-name: {{ printf "private-subnet-%d" $index }}
-            spec:
-              managementPolicies:
-                - Observe
-              forProvider:
-                region: {{ $region | quote }}
-              providerConfigRef:
-                name: aws-provider
-                kind: ClusterProviderConfig
-            {{- end }}
-            {{- $privateSubnetCidrs := list }}
-            {{- range $index, $_ := $spec.privateSubnetIds }}
-            {{- $subnet := getComposedResource . (printf "private-subnet-%d" $index) }}
-            {{- if $subnet }}
-            {{- $cidr := get $subnet.status.atProvider "cidrBlock" }}
-            {{- if $cidr }}
-            {{- $privateSubnetCidrs = append $privateSubnetCidrs $cidr }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
             ---
             apiVersion: ec2.aws.m.upbound.io/v1beta1
             kind: SecurityGroup
@@ -104,15 +75,13 @@ spec:
                 description: {{ printf "Database access for %s" $dbBaseName | quote }}
                 region: {{ $region | quote }}
                 vpcId: {{ $spec.vpcId | quote }}
-                {{- if $privateSubnetCidrs }}
                 ingress:
                   - description: PostgreSQL from private VPC subnets
                     protocol: tcp
                     fromPort: 5432
                     toPort: 5432
                     cidrBlocks:
-                      {{- toYaml $privateSubnetCidrs | nindent 22 }}
-                {{- end }}
+                      {{- toYaml $spec.privateSubnetCidrs | nindent 22 }}
                 tags:
                   Name: {{ $securityGroupName | quote }}
                   Project: {{ $project | quote }}

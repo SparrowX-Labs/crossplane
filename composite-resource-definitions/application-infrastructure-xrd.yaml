@@ -26,6 +26,7 @@ spec:
                 - region
                 - vpcId
                 - privateSubnetIds
+                - privateSubnetCidrs
                 - hostedZoneId
                 - hostedZoneName
                 - service
@@ -39,6 +40,10 @@ spec:
                 vpcId:
                   type: string
                 privateSubnetIds:
+                  type: array
+                  items:
+                    type: string
+                privateSubnetCidrs:
                   type: array
                   items:
                     type: string
