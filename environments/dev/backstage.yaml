@@ -1,0 +1,13 @@
+service:
+  name: backstage
+
+database:
+  enabled: true
+  engine: postgres
+  name: "backstage"
+  size: small
+  storage: 20
+  multiAZ: false
+
+s3:
+  enabled: false

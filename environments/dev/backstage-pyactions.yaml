@@ -1,0 +1,8 @@
+service:
+  name: backstage-pyactions
+
+database:
+  enabled: false
+
+s3:
+  enabled: false
