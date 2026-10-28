@@ -2,7 +2,7 @@ service:
   name: customer-api
 
 database:
-  enabled: false
+  enabled: true
   engine: postgres
   name: "customerdb"
   size: small
