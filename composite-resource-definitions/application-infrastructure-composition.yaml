@@ -77,7 +77,6 @@ spec:
                 sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-security-group
-                crossplane.io/external-name: {{ $securityGroupName | quote }}
             spec:
               managementPolicies:
                 - "*"
