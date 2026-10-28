@@ -108,7 +108,6 @@ spec:
                 sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: {{ printf "database-security-group-ingress-%d" $index }}
-                crossplane.io/external-name: {{ printf "%s-postgres-private-%d" $dbBaseName $index | trunc 63 | trimSuffix "-" }}
             spec:
               managementPolicies:
                 - "*"
@@ -220,7 +219,6 @@ spec:
                 sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-dns-record
-                crossplane.io/external-name: {{ printf "%s-%s.%s" $dbName $spec.database.engine $spec.hostedZoneName | quote }}
             spec:
               managementPolicies:
                 - "*"
