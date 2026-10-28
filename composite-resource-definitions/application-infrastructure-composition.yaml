@@ -20,6 +20,8 @@ spec:
             {{- $xr := getCompositeResource . }}
             {{- $spec := $xr.spec }}
             {{- $namespace := $xr.metadata.namespace }}
+            {{- $trackingID := get $xr.metadata.annotations "argocd.argoproj.io/tracking-id" | default "" }}
+            {{- $argoApp := (splitList ":" $trackingID | first) | default "unknown" }}
             {{- $project := $spec.projectName }}
             {{- $environment := $spec.environment }}
             {{- $region := $spec.region }}
@@ -32,6 +34,9 @@ spec:
             metadata:
               name: {{ printf "%s-ecr" $baseName | trunc 63 | trimSuffix "-" }}
               namespace: {{ $namespace }}
+              labels:
+                sparrowx.io/argo-application: {{ $argoApp | trunc 63 | trimSuffix "-" | quote }}
+                sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: ecr-repository
                 crossplane.io/external-name: {{ $repositoryName }}
@@ -49,6 +54,8 @@ spec:
                   Project: {{ $project | quote }}
                   Environment: {{ $environment | quote }}
                   ManagedBy: crossplane
+                  ArgoApplication: {{ $argoApp | quote }}
+                  CrossplaneXR: {{ $xr.metadata.name | quote }}
               providerConfigRef:
                 name: aws-provider
                 kind: ClusterProviderConfig
@@ -65,8 +72,12 @@ spec:
             metadata:
               name: {{ $securityGroupName }}
               namespace: {{ $namespace }}
+              labels:
+                sparrowx.io/argo-application: {{ $argoApp | trunc 63 | trimSuffix "-" | quote }}
+                sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-security-group
+                crossplane.io/external-name: {{ $securityGroupName | quote }}
             spec:
               managementPolicies:
                 - "*"
@@ -80,6 +91,8 @@ spec:
                   Project: {{ $project | quote }}
                   Environment: {{ $environment | quote }}
                   ManagedBy: crossplane
+                  ArgoApplication: {{ $argoApp | quote }}
+                  CrossplaneXR: {{ $xr.metadata.name | quote }}
               providerConfigRef:
                 name: aws-provider
                 kind: ClusterProviderConfig
@@ -90,8 +103,12 @@ spec:
             metadata:
               name: {{ printf "%s-postgres-private-%d" $dbBaseName $index | trunc 63 | trimSuffix "-" }}
               namespace: {{ $namespace }}
+              labels:
+                sparrowx.io/argo-application: {{ $argoApp | trunc 63 | trimSuffix "-" | quote }}
+                sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: {{ printf "database-security-group-ingress-%d" $index }}
+                crossplane.io/external-name: {{ printf "%s-postgres-private-%d" $dbBaseName $index | trunc 63 | trimSuffix "-" }}
             spec:
               managementPolicies:
                 - "*"
@@ -113,8 +130,12 @@ spec:
             metadata:
               name: {{ $subnetGroupName }}
               namespace: {{ $namespace }}
+              labels:
+                sparrowx.io/argo-application: {{ $argoApp | trunc 63 | trimSuffix "-" | quote }}
+                sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-subnet-group
+                crossplane.io/external-name: {{ $subnetGroupName | quote }}
             spec:
               managementPolicies:
                 - "*"
@@ -128,6 +149,8 @@ spec:
                   Project: {{ $project | quote }}
                   Environment: {{ $environment | quote }}
                   ManagedBy: crossplane
+                  ArgoApplication: {{ $argoApp | quote }}
+                  CrossplaneXR: {{ $xr.metadata.name | quote }}
               providerConfigRef:
                 name: aws-provider
                 kind: ClusterProviderConfig
@@ -137,8 +160,12 @@ spec:
             metadata:
               name: {{ $dbBaseName }}
               namespace: {{ $namespace }}
+              labels:
+                sparrowx.io/argo-application: {{ $argoApp | trunc 63 | trimSuffix "-" | quote }}
+                sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-instance
+                crossplane.io/external-name: {{ $dbBaseName | quote }}
             spec:
               managementPolicies:
                 - "*"
@@ -171,6 +198,8 @@ spec:
                   Project: {{ $project | quote }}
                   Environment: {{ $environment | quote }}
                   ManagedBy: crossplane
+                  ArgoApplication: {{ $argoApp | quote }}
+                  CrossplaneXR: {{ $xr.metadata.name | quote }}
               writeConnectionSecretToRef:
                 name: {{ printf "%s-connection" $dbBaseName | quote }}
               providerConfigRef:
@@ -186,8 +215,12 @@ spec:
             metadata:
               name: {{ printf "%s-dns" $dbBaseName | trunc 63 | trimSuffix "-" }}
               namespace: {{ $namespace }}
+              labels:
+                sparrowx.io/argo-application: {{ $argoApp | trunc 63 | trimSuffix "-" | quote }}
+                sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: database-dns-record
+                crossplane.io/external-name: {{ printf "%s-%s.%s" $dbName $spec.database.engine $spec.hostedZoneName | quote }}
             spec:
               managementPolicies:
                 - "*"
@@ -212,8 +245,12 @@ spec:
             metadata:
               name: {{ $spec.s3.name | quote }}
               namespace: {{ $namespace }}
+              labels:
+                sparrowx.io/argo-application: {{ $argoApp | trunc 63 | trimSuffix "-" | quote }}
+                sparrowx.io/xr: {{ $xr.metadata.name | quote }}
               annotations:
                 gotemplating.fn.crossplane.io/composition-resource-name: s3-bucket
+                crossplane.io/external-name: {{ $spec.s3.name | quote }}
             spec:
               managementPolicies:
                 - "*"
@@ -225,6 +262,8 @@ spec:
                   Project: {{ $project | quote }}
                   Environment: {{ $environment | quote }}
                   ManagedBy: crossplane
+                  ArgoApplication: {{ $argoApp | quote }}
+                  CrossplaneXR: {{ $xr.metadata.name | quote }}
               providerConfigRef:
                 name: aws-provider
                 kind: ClusterProviderConfig
