@@ -37,3 +37,40 @@ jobs:
       app-name: ${{ matrix.app }}
       environment: prod
     secrets: inherit
+
+  summary:
+    name: Sync summary
+    needs:
+      - detect-changes
+      - sync-dev
+      - sync-prod
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish sync summary
+        shell: bash
+        env:
+          DEV_APPS: ${{ needs.detect-changes.outputs.dev }}
+          PROD_APPS: ${{ needs.detect-changes.outputs.prod }}
+          DEV_RESULT: ${{ needs.sync-dev.result }}
+          PROD_RESULT: ${{ needs.sync-prod.result }}
+        run: |
+          set -euo pipefail
+
+          {
+            echo "## Argo CD sync summary"
+            echo
+            echo "### Dev ($DEV_RESULT)"
+            if [[ "$DEV_APPS" == "[]" ]]; then
+              echo "- No changed applications"
+            else
+              jq -r '.[] | "- `" + . + "`"' <<< "$DEV_APPS"
+            fi
+            echo
+            echo "### Prod ($PROD_RESULT)"
+            if [[ "$PROD_APPS" == "[]" ]]; then
+              echo "- No changed applications"
+            else
+              jq -r '.[] | "- `" + . + "`"' <<< "$PROD_APPS"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
