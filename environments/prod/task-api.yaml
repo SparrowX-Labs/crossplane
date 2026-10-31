@@ -5,7 +5,7 @@ database:
   enabled: true
 
   engine: postgres
-  name: "task-db"
+  name: "taskdb"
   size: small
   storage: 20
   multiAZ: false

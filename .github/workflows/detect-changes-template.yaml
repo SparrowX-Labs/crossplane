@@ -1,0 +1,55 @@
+name: Detect changed Crossplane applications
+
+on:
+  workflow_call:
+    outputs:
+      dev:
+        description: Changed development Argo CD applications as JSON
+        value: ${{ jobs.detect.outputs.dev }}
+      prod:
+        description: Changed production Argo CD applications as JSON
+        value: ${{ jobs.detect.outputs.prod }}
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      dev: ${{ steps.apps.outputs.dev }}
+      prod: ${{ steps.apps.outputs.prod }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Find changed environment files
+        uses: dorny/paths-filter@v3
+        id: changed
+        with:
+          list-files: json
+          filters: |
+            dev:
+              - 'environments/dev/*.yaml'
+            prod:
+              - 'environments/prod/*.yaml'
+
+      - name: Build Argo CD application lists
+        id: apps
+        shell: bash
+        env:
+          DEV_FILES: ${{ steps.changed.outputs.dev_files }}
+          PROD_FILES: ${{ steps.changed.outputs.prod_files }}
+        run: |
+          set -euo pipefail
+
+          applications() {
+            local environment="$1"
+            local files="$2"
+            jq -c --arg environment "$environment" \
+              '[.[] | split("/")[-1] | sub("\\.ya?ml$"; "") + "-" + $environment + "-resources"] | unique' \
+              <<< "$files"
+          }
+
+          echo "dev=$(applications dev "$DEV_FILES")" >> "$GITHUB_OUTPUT"
+          echo "prod=$(applications prod "$PROD_FILES")" >> "$GITHUB_OUTPUT"

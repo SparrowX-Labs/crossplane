@@ -1,0 +1,39 @@
+name: Apply Crossplane changes
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  detect-changes:
+    uses: ./.github/workflows/detect-changes-template.yaml
+
+  sync-dev:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.dev != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.detect-changes.outputs.dev) }}
+    uses: ./.github/workflows/argosync-template.yaml
+    with:
+      app-name: ${{ matrix.app }}
+      environment: dev
+    secrets: inherit
+
+  sync-prod:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.prod != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.detect-changes.outputs.prod) }}
+    uses: ./.github/workflows/argosync-template.yaml
+    with:
+      app-name: ${{ matrix.app }}
+      environment: prod
+    secrets: inherit
