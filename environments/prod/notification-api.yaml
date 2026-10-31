@@ -1,0 +1,15 @@
+service:
+  name: notification-api
+
+database:
+  enabled: true
+
+  engine: postgres
+  name: "notificationdb"
+  size: small
+  storage: 20
+  multiAZ: false
+
+
+s3:
+  enabled: false
