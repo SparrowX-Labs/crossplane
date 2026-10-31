@@ -2,14 +2,7 @@ service:
   name: reporting-api
 
 database:
-  enabled: true
-
-  engine: postgres
-  name: "reportingdb"
-  size: small
-  storage: 20
-  multiAZ: false
-
+  enabled: false
 
 s3:
   enabled: false

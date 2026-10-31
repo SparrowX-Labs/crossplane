@@ -25,16 +25,35 @@ jobs:
     name: Sync ${{ inputs.app-name }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    env:
+      APP_NAME: ${{ inputs.app-name }}
+      ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+      ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
     steps:
-      - name: Verify Argo CD access
+      - name: Install Argo CD CLI
         uses: clowdhaus/argo-cd-action@v4.2.0
         with:
           version: 2.14.11
-          command: app get ${{ inputs.app-name }}
-          options: >-
-            --server ${{ secrets.ARGOCD_SERVER }}
-            --auth-token ${{ secrets.ARGOCD_AUTH_TOKEN }}
-            --grpc-web
+
+      - name: Wait for Argo CD application
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..30}; do
+            if argocd app get "$APP_NAME" \
+              --server "$ARGOCD_SERVER" \
+              --auth-token "$ARGOCD_AUTH_TOKEN" \
+              --grpc-web; then
+              exit 0
+            fi
+
+            echo "Application $APP_NAME is not available yet; retrying in 10 seconds ($attempt/30)"
+            sleep 10
+          done
+
+          echo "Timed out waiting for Argo CD application $APP_NAME"
+          exit 1
 
       - name: Sync application
         uses: clowdhaus/argo-cd-action@v4.2.0
