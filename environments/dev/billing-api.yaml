@@ -2,13 +2,13 @@ service:
   name: billing-api
 
 database:
-  enabled: true
+  enabled: false
 
-  engine: postgres
-  name: "billingdb"
-  size: small
-  storage: 20
-  multiAZ: false
+  # engine: postgres
+  # name: "billingdb"
+  # size: small
+  # storage: 20
+  # multiAZ: false
 
 
 s3:

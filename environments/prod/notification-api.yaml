@@ -2,13 +2,13 @@ service:
   name: notification-api
 
 database:
-  enabled: true
+  enabled: false
 
-  engine: postgres
-  name: "notificationdb"
-  size: small
-  storage: 20
-  multiAZ: false
+  # engine: postgres
+  # name: "notificationdb"
+  # size: small
+  # storage: 20
+  # multiAZ: false
 
 
 s3:
